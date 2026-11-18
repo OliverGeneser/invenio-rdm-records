@@ -34,6 +34,17 @@ function LinksTable({ data }) {
     fetchFormats();
   }, [fetchFormats]);
 
+  // `data` is injected asynchronously by AdminDetailsView once the
+  // resource has loaded.
+  useEffect(() => {
+    if (data?.links) {
+      setLinks(data.links);
+    }
+    if (data?.currentPrefix) {
+      setCurrentFormat(data.currentPrefix);
+    }
+  }, [data]);
+
   const fetchFormats = async () => {
     const cancellableFetchFormats = withCancel(http.get("/api/oaipmh/formats"));
 
@@ -180,7 +191,8 @@ function LinksTable({ data }) {
 }
 
 LinksTable.propTypes = {
-  data: PropTypes.object.isRequired,
+  // Injected asynchronously by AdminDetailsView once the resource loads.
+  data: PropTypes.object,
 };
 
 export default LinksTable;

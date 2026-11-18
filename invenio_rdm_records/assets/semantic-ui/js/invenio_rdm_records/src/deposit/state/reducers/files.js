@@ -10,6 +10,9 @@ import {
   FILE_IMPORT_FAILED,
   FILE_IMPORT_STARTED,
   FILE_IMPORT_SUCCESS,
+  FILE_METADATA_UPDATE_FAILED,
+  FILE_METADATA_UPDATE_STARTED,
+  FILE_METADATA_UPDATE_SUCCESS,
   FILE_UPLOAD_ADDED,
   FILE_UPLOAD_CANCELLED,
   FILE_UPLOAD_FAILED,
@@ -190,6 +193,33 @@ const fileReducer = (state = initialState, action) => {
       return {
         ...state,
         isFileImportInProgress: false,
+        actionState: action.type,
+      };
+    case FILE_METADATA_UPDATE_STARTED:
+      return {
+        ...state,
+        actionState: action.type,
+      };
+    case FILE_METADATA_UPDATE_SUCCESS: {
+      const entry = state.entries?.[remoteFileName];
+      if (!entry) {
+        return { ...state, actionState: action.type };
+      }
+      return {
+        ...state,
+        entries: {
+          ...state.entries,
+          [remoteFileName]: {
+            ...entry,
+            metadata: action.payload.metadata,
+          },
+        },
+        actionState: action.type,
+      };
+    }
+    case FILE_METADATA_UPDATE_FAILED:
+      return {
+        ...state,
         actionState: action.type,
       };
     default:

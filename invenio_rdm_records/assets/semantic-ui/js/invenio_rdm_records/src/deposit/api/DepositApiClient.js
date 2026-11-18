@@ -337,6 +337,10 @@ export class DepositFileApiClient {
   deleteFile(fileLinks) {
     throw new Error("Not implemented.");
   }
+
+  updateFileMetadata(fileLinks, metadata) {
+    throw new Error("Not implemented.");
+  }
 }
 
 /**
@@ -391,6 +395,11 @@ export class RDMDepositFileApiClient extends DepositFileApiClient {
 
   deleteFile(fileLinks) {
     return this.axiosWithConfig.delete(fileLinks.self);
+  }
+
+  updateFileMetadata(fileLinks, metadata) {
+    const selfLink = typeof fileLinks === "string" ? fileLinks : fileLinks?.self;
+    return this.axiosWithConfig.put(selfLink, { metadata });
   }
 
   async uploadPart(uploadParams) {

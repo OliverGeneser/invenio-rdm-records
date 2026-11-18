@@ -15,6 +15,7 @@ import { useState } from "react";
 import Dropzone from "react-dropzone";
 import {
   Button,
+  Label,
   Radio,
   Grid,
   Header,
@@ -25,6 +26,7 @@ import {
   Table,
 } from "semantic-ui-react";
 import { humanReadableBytes, FeedbackLabel } from "react-invenio-forms";
+import { PdfAnnotationModal, isPdfFile } from "./PdfAnnotationModal";
 
 const FileTableHeader = ({ filesLocked = false }) => (
   <Table.Header>
@@ -61,11 +63,17 @@ const FileTableRow = ({
   decimalSizeDisplay = false,
   fileError = undefined,
   fileActions = undefined,
+  onAnnotate = undefined,
 }) => {
   const [isCancelling, setIsCancelling] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const isDefaultPreview = defaultPreview === file.name;
   const fileAction = fileActions ? fileActions(file) : null;
+  const pdfAnnotatable =
+    isPdfFile(file) && !!file.uploadState.isFinished && _get(file, "links.content");
+  const annotationCount = Array.isArray(file?.metadata?.annotations)
+    ? file.metadata.annotations.length
+    : 0;
 
   const handleDelete = async (file) => {
     setIsDeleting(true);
@@ -120,6 +128,32 @@ const FileTableRow = ({
             >
               {file.uploadState.isPending ? (
                 <div className="text-break">{file.name}</div>
+              ) : pdfAnnotatable ? (
+                <Button
+                  type="button"
+                  basic
+                  size="small"
+                  className="text-break"
+                  title={i18next.t("Click to annotate this PDF")}
+                  onClick={() => onAnnotate && onAnnotate(file)}
+                  style={{ padding: "0.25em 0.5em" }}
+                >
+                  <Icon name="pencil alternate" />
+                  {file.name}
+                  {annotationCount > 0 && (
+                    <Label
+                      circular
+                      size="tiny"
+                      color="teal"
+                      style={{ marginLeft: "0.5em" }}
+                      title={i18next.t("{{count}} annotations", {
+                        count: annotationCount,
+                      })}
+                    >
+                      {annotationCount}
+                    </Label>
+                  )}
+                </Button>
               ) : (
                 <a
                   href={_get(file, "links.content", "")}
@@ -223,6 +257,7 @@ FileTableRow.propTypes = {
   decimalSizeDisplay: PropTypes.bool,
   fileError: PropTypes.object,
   fileActions: PropTypes.func,
+  onAnnotate: PropTypes.func,
 };
 
 const FileUploadBox = ({
@@ -285,29 +320,39 @@ export const FilesListTable = ({
 }) => {
   const { errors, setFieldValue, values: formikDraft } = useFormikContext();
   const defaultPreview = _get(formikDraft, "files.default_preview", "");
+  const [annotationFileName, setAnnotationFileName] = useState(null);
+  const annotationFile = filesList.find((f) => f.name === annotationFileName) || null;
   return (
-    <Table>
-      <FileTableHeader filesLocked={filesLocked} />
-      <Table.Body>
-        {filesList.map((file) => {
-          return (
-            <FileTableRow
-              key={file.name}
-              filesLocked={filesLocked}
-              file={file}
-              deleteFile={deleteFile}
-              defaultPreview={defaultPreview}
-              setDefaultPreview={(filename) =>
-                setFieldValue("files.default_preview", filename)
-              }
-              decimalSizeDisplay={decimalSizeDisplay}
-              fileError={getIn(errors, "files.entries." + file.name, undefined)}
-              fileActions={fileActions}
-            />
-          );
-        })}
-      </Table.Body>
-    </Table>
+    <>
+      <Table>
+        <FileTableHeader filesLocked={filesLocked} />
+        <Table.Body>
+          {filesList.map((file) => {
+            return (
+              <FileTableRow
+                key={file.name}
+                filesLocked={filesLocked}
+                file={file}
+                deleteFile={deleteFile}
+                defaultPreview={defaultPreview}
+                setDefaultPreview={(filename) =>
+                  setFieldValue("files.default_preview", filename)
+                }
+                decimalSizeDisplay={decimalSizeDisplay}
+                fileError={getIn(errors, "files.entries." + file.name, undefined)}
+                fileActions={fileActions}
+                onAnnotate={(f) => setAnnotationFileName(f?.name || null)}
+              />
+            );
+          })}
+        </Table.Body>
+      </Table>
+      <PdfAnnotationModal
+        open={!!annotationFile}
+        file={annotationFile}
+        onClose={() => setAnnotationFileName(null)}
+      />
+    </>
   );
 };
 

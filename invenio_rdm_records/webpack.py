@@ -58,6 +58,7 @@ theme = WebpackThemeBundle(
                 "redux-thunk": "^2.3.0",
                 "lodash": "^4.17.0",
                 "query-string": "^7.0.0",
+                "pdfjs-dist": "^5.0",
                 "semantic-ui-css": "^2.5.0",
                 "semantic-ui-react": "^3.0.0-beta.2",
                 "@visx/group": "^3.12.0",

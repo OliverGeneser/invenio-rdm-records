@@ -108,6 +108,10 @@ export class DepositFilesService {
     throw new Error("Not implemented.");
   }
 
+  async updateFileMetadata(fileLinks, metadata) {
+    throw new Error("Not implemented.");
+  }
+
   async importParentRecordFiles(draftLinks) {
     throw new Error("Not implemented.");
   }
@@ -223,6 +227,11 @@ export class RDMDepositFilesService extends DepositFilesService {
     return await this.fileApiClient.deleteFile(fileLinks);
   };
 
+  updateFileMetadata = async (fileLinks, metadata) => {
+    const response = await this.fileApiClient.updateFileMetadata(fileLinks, metadata);
+    return response.data;
+  };
+
   uploadPart = async (uploadParams) => {
     return await this.fileApiClient.uploadPart(uploadParams);
   };
@@ -244,6 +253,8 @@ export class RDMDepositFilesService extends DepositFilesService {
           progressPercentage: 100,
           checksum: file.checksum,
           links: file.links,
+          metadata: file.metadata || {},
+          mimetype: file.mimetype || "application/octet-stream",
         },
       }),
       {}

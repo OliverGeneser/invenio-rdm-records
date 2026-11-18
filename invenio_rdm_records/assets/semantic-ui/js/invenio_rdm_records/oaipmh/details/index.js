@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: MIT
  */
 
-import ReactDOM from "react-dom";
+import { createRoot } from "react-dom/client";
 import _get from "lodash/get";
 import { OverridableContext, parametrize } from "react-overridable";
 import LinksTable from "./LinksTable";
@@ -42,24 +42,31 @@ const overridenComponents = {
 };
 
 domContainer &&
-  ReactDOM.render(
-    <OverridableContext.Provider value={overridenComponents}>
-      <AdminDetailsView
-        title={title}
-        actions={actions}
-        apiEndpoint={apiEndpoint}
-        columns={fields}
-        displayEdit={displayEdit}
-        displayDelete={displayDelete}
-        pid={pidValue}
-        idKeyPath={idKeyPath}
-        resourceName={resourceName}
-        listUIEndpoint={listUIEndpoint}
-        resourceSchema={resourceSchema}
-        uiSchema={uiSchema}
-      >
-        <LinksTable />
-      </AdminDetailsView>
-    </OverridableContext.Provider>,
-    domContainer
-  );
+  (() => {
+    // See invenio_administration details.js: share a single root per
+    // container so the page-specific bundle updates (rather than fights)
+    // the generic details bundle. Last render wins.
+    if (!domContainer._invenioReactRoot) {
+      domContainer._invenioReactRoot = createRoot(domContainer);
+    }
+    domContainer._invenioReactRoot.render(
+      <OverridableContext.Provider value={overridenComponents}>
+        <AdminDetailsView
+          title={title}
+          actions={actions}
+          apiEndpoint={apiEndpoint}
+          columns={fields}
+          displayEdit={displayEdit}
+          displayDelete={displayDelete}
+          pid={pidValue}
+          idKeyPath={idKeyPath}
+          resourceName={resourceName}
+          listUIEndpoint={listUIEndpoint}
+          resourceSchema={resourceSchema}
+          uiSchema={uiSchema}
+        >
+          <LinksTable />
+        </AdminDetailsView>
+      </OverridableContext.Provider>
+    );
+  })();

@@ -12,6 +12,9 @@ import {
   FILE_IMPORT_FAILED,
   FILE_IMPORT_STARTED,
   FILE_IMPORT_SUCCESS,
+  FILE_METADATA_UPDATE_FAILED,
+  FILE_METADATA_UPDATE_STARTED,
+  FILE_METADATA_UPDATE_SUCCESS,
   FILE_UPLOAD_SAVE_DRAFT_FAILED,
   FILE_UPLOAD_ADDED,
   FILE_UPLOAD_FINISHED,
@@ -195,5 +198,37 @@ export const importParentFiles = () => {
 export const setUploadProgress = (file, percent) => {
   return async (dispatch, getState, config) => {
     await config.service.files.progressNotifier.onUploadProgress(file.name, percent);
+  };
+};
+
+export const updateFileMetadata = (file, metadata) => {
+  return async (dispatch, _, config) => {
+    const filename = file.name;
+    dispatch({
+      type: FILE_METADATA_UPDATE_STARTED,
+      payload: { filename },
+    });
+    try {
+      const fileLinks = file.links;
+      const updated = await config.service.files.updateFileMetadata(
+        fileLinks,
+        metadata
+      );
+      dispatch({
+        type: FILE_METADATA_UPDATE_SUCCESS,
+        payload: {
+          filename,
+          metadata: updated?.metadata ?? metadata,
+        },
+      });
+      return updated;
+    } catch (error) {
+      console.error("Error updating file metadata", error, file);
+      dispatch({
+        type: FILE_METADATA_UPDATE_FAILED,
+        payload: { filename },
+      });
+      throw error;
+    }
   };
 };
